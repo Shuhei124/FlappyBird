@@ -25,7 +25,7 @@ class ViewController: UIViewController {
         // ビューと同じサイズでシーンを作成する
         let scene = GameScene(size:skView.frame.size)
 
-        // ビューにシーンを表示する
+        // ビューにシーンを表示する(SkViewの上にsceneを表示)
         skView.presentScene(scene)
     }
     
