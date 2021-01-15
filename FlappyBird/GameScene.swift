@@ -12,15 +12,18 @@ class GameScene: SKScene, SKPhysicsContactDelegate /* 追加 */ {
     var scrollNode:SKNode!
     var wallNode:SKNode!
     var bird:SKSpriteNode!
+    var itemNode:SKNode!
 
     // 衝突判定カテゴリー ↓追加
     let birdCategory: UInt32 = 1 << 0       // 0...00001
     let groundCategory: UInt32 = 1 << 1     // 0...00010
     let wallCategory: UInt32 = 1 << 2       // 0...00100
     let scoreCategory: UInt32 = 1 << 3      // 0...01000
-
+    let itemCategory: UInt32 = 1 << 4      // 0...10000
+    let item_scoreCategory: UInt32 = 1 << 5      // 0...100000
     // スコア用
    var score = 0
+   var item_score = 0
    var scoreLabelNode:SKLabelNode!    // ←追加
    var bestScoreLabelNode:SKLabelNode!    // ←追加
    let userDefaults:UserDefaults = UserDefaults.standard
@@ -39,15 +42,20 @@ class GameScene: SKScene, SKPhysicsContactDelegate /* 追加 */ {
         scrollNode = SKNode()
         addChild(scrollNode)
 
-        // 壁用のノード
+        // 壁用のノード ★なぜ鳥と雲はノード不要なのか?
         wallNode = SKNode()
         scrollNode.addChild(wallNode)
 
+        // アイテム用のノード??
+        itemNode = SKNode()
+        scrollNode.addChild(itemNode)
+        
         // 各種スプライトを生成する処理をメソッドに分割
         setupGround()
         setupCloud()
         setupWall()
         setupBird()
+        setupItem()
         
         setupScoreLabel()
     }
@@ -226,7 +234,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate /* 追加 */ {
                 // 壁関連のノードを乗せるノードを作成
                 let wall = SKNode()
                 wall.position = CGPoint(x: self.frame.size.width + wallTexture.size().width / 2, y: 0)
-                wall.zPosition = -50 // 雲より手前、地面より奥
+                wall.zPosition = -60 // 雲より手前、地面より奥
 
                 // 0〜random_y_rangeまでのランダム値を生成
                 let random_y = CGFloat.random(in: 0..<random_y_range)
@@ -235,7 +243,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate /* 追加 */ {
 
                 // 下側の壁を作成　★壁のx軸が0になるのはなぜか、右から左に移動させているので一番右ではないのはなぜ?
                 let under = SKSpriteNode(texture: wallTexture)
-                under.position = CGPoint(x: 0, y: under_wall_y)
+                under.position = CGPoint(x: 0, y: under_wall_y) //★この座標軸はwallのpositionの中の位置?
 
                 // スプライトに物理演算を設定する(物理演算)
                 under.physicsBody = SKPhysicsBody(rectangleOf: wallTexture.size())
@@ -261,7 +269,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate /* 追加 */ {
 
                 // スコアアップ用の（物体）ノード (衝突判定)--- ここから ---
                 let scoreNode = SKNode()
-                scoreNode.position = CGPoint(x: upper.size.width + birdSize.width / 2, y: self.frame.height / 2)
+                scoreNode.position = CGPoint(x: upper.size.width + birdSize.width / 2, y: self.frame.height / 2) //★なぜこのポジションかわからない。
                 scoreNode.physicsBody = SKPhysicsBody(rectangleOf: CGSize(width: upper.size.width, height: self.frame.size.height))
                 scoreNode.physicsBody?.isDynamic = false
                 
@@ -355,8 +363,93 @@ class GameScene: SKScene, SKPhysicsContactDelegate /* 追加 */ {
         bird.zRotation = 0
 
         wallNode.removeAllChildren()
+        itemNode.removeAllChildren()
 
         bird.speed = 1
         scrollNode.speed = 1
     }
+    
+    //アイテム
+    func setupItem() {
+            // 壁の画像を読み込む
+            let itemTexture = SKTexture(imageNamed: "coin")
+            itemTexture.filteringMode = .linear
+
+            // 移動する距離を計算
+            let movingDistance = CGFloat(self.frame.size.width + itemTexture.size().width)
+
+            // 画面外まで移動するアクションを作成
+            let moveItem = SKAction.moveBy(x: -movingDistance, y: 0, duration:4)
+
+            // 自身を取り除くアクションを作成
+            let removeItem = SKAction.removeFromParent()
+
+            // 2つのアニメーションを順に実行するアクションを作成
+            let itemAnimation = SKAction.sequence([moveItem, removeItem])
+
+
+            // 下の壁のY軸下限位置(中央位置から下方向の最大振れ幅で下の壁を表示する位置)を計算
+            let groundSize = SKTexture(imageNamed: "ground").size()
+            let random_y_range = self.frame.size.height - groundSize.height - itemTexture.size().height
+            let under_item_lowest_y = groundSize.height + itemTexture.size().height/2
+
+            // アイテムを生成するアクションを作成
+            let createitemAnimation = SKAction.run({
+                // アイテム関連のノードを乗せるノードを作成
+                let item = SKNode()
+                //★ここがよく分からない。なぜこの位置なのか。
+               
+
+                // 0〜random_y_rangeまでのランダム値を生成
+                let random_y = CGFloat.random(in: 0..<random_y_range)
+                // Y軸の下限にランダムな値を足して、下の壁のY座標を決定
+                let item_y = under_item_lowest_y + random_y
+
+                item.position = CGPoint(x: self.frame.size.width + itemTexture.size().width / 2, y: 0)
+                item.zPosition = -50 // 雲より手前、地面より奥??
+                
+                //コインのspritenodeの作成
+                let object = SKSpriteNode(texture: itemTexture)
+                object.position = CGPoint(x: 0, y: item_y) //★ここがよく分からない。
+
+                // スプライトに物理演算を設定する(物理演算)
+                object.physicsBody = SKPhysicsBody(circleOfRadius: itemTexture.size().height / 2)
+                object.physicsBody?.categoryBitMask = self.itemCategory    // ←追加
+
+                // 衝突の時に動かないように設定する(物理演算) falseだとぶつかった時に動かなくなる
+                object.physicsBody?.isDynamic = true
+
+                item.addChild(object)
+
+                // スコアアップ用の（物体）ノード (衝突判定)　画像と同じ場所に入れる--- ここから ---
+                let item_scoreNode = SKNode()
+                item_scoreNode.position = CGPoint(x: 0, y: item_y) //★ここがよく分からない。
+                item_scoreNode.physicsBody = SKPhysicsBody(circleOfRadius: itemTexture.size().height / 2)
+                item_scoreNode.physicsBody?.isDynamic = true
+                
+                //自身のカテゴリースコア用の物体(32ビットの数値)を設定
+                item_scoreNode.physicsBody?.categoryBitMask = self.item_scoreCategory
+                //衝突することを判別する相手のカテゴリー(32ビットの数値)を設定
+                item_scoreNode.physicsBody?.contactTestBitMask = self.birdCategory
+                
+
+                item.addChild(item_scoreNode)
+                // --- ここまで ---
+
+                item.run(itemAnimation)
+
+                self.itemNode.addChild(item)
+            })
+            // 次の壁作成までの時間待ちのアクションを作成
+            let waitAnimation = SKAction.wait(forDuration: 2)
+
+            // 壁を作成->時間待ち->壁を作成を無限に繰り返すアクションを作成
+            let repeatForeverAnimation = SKAction.repeatForever(SKAction.sequence([createitemAnimation, waitAnimation]))
+
+            itemNode.run(repeatForeverAnimation)
+        }
+    
 }
+
+
+//
