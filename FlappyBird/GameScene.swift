@@ -97,6 +97,16 @@ class GameScene: SKScene, SKPhysicsContactDelegate /* 追加 */ {
                    userDefaults.set(bestScore, forKey: "BEST")
                    userDefaults.synchronize()
                }
+           }
+               else if (contact.bodyA.categoryBitMask) == itemCategory ||
+                        (contact.bodyB.categoryBitMask) == itemCategory {
+                if contact.bodyA.categoryBitMask == itemCategory{
+                contact.bodyA.node?.removeFromParent()
+                }
+                if contact.bodyB.categoryBitMask == itemCategory{
+                contact.bodyB.node?.removeFromParent()
+                }
+                
            } else {
                // 壁か地面と衝突した
                print("GameOver")
@@ -111,7 +121,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate /* 追加 */ {
                    self.bird.speed = 0
                })
            }
-       }
+           }
     
     //地面
     func setupGround() {
@@ -234,7 +244,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate /* 追加 */ {
                 // 壁関連のノードを乗せるノードを作成
                 let wall = SKNode()
                 wall.position = CGPoint(x: self.frame.size.width + wallTexture.size().width / 2, y: 0)
-                wall.zPosition = -60 // 雲より手前、地面より奥
+                wall.zPosition = -50 // 雲より手前、地面より奥
 
                 // 0〜random_y_rangeまでのランダム値を生成
                 let random_y = CGFloat.random(in: 0..<random_y_range)
@@ -320,7 +330,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate /* 追加 */ {
 
             // 衝突のカテゴリー設定(衝突判定)
             bird.physicsBody?.categoryBitMask = birdCategory    // ←追加
-                //categoryBitMaskは当たった時に跳ね返る動作をする相手を設定する。
+                //collisionBitMaskは当たった時に跳ね返る動作をする相手を設定する。
             bird.physicsBody?.collisionBitMask = groundCategory | wallCategory    // ←追加
                 //衝突することを判別する相手のカテゴリー(32ビットの数値)を設定(鳥はグラウンドか壁に衝突する)
             bird.physicsBody?.contactTestBitMask = groundCategory | wallCategory    // ←追加
@@ -379,7 +389,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate /* 追加 */ {
             let movingDistance = CGFloat(self.frame.size.width + itemTexture.size().width)
 
             // 画面外まで移動するアクションを作成
-            let moveItem = SKAction.moveBy(x: -movingDistance, y: 0, duration:4)
+            let moveItem = SKAction.moveBy(x: -movingDistance, y: 0, duration:2)
 
             // 自身を取り除くアクションを作成
             let removeItem = SKAction.removeFromParent()
@@ -398,43 +408,30 @@ class GameScene: SKScene, SKPhysicsContactDelegate /* 追加 */ {
                 // アイテム関連のノードを乗せるノードを作成
                 let item = SKNode()
                 //★ここがよく分からない。なぜこの位置なのか。
-               
+                item.position = CGPoint(x: self.frame.size.width + itemTexture.size().width / 2, y: 0)
+                item.zPosition = -60 // 雲より手前、地面より奥??
 
                 // 0〜random_y_rangeまでのランダム値を生成
                 let random_y = CGFloat.random(in: 0..<random_y_range)
                 // Y軸の下限にランダムな値を足して、下の壁のY座標を決定
                 let item_y = under_item_lowest_y + random_y
 
-                item.position = CGPoint(x: self.frame.size.width + itemTexture.size().width / 2, y: 0)
-                item.zPosition = -50 // 雲より手前、地面より奥??
-                
+
                 //コインのspritenodeの作成
-                let object = SKSpriteNode(texture: itemTexture)
-                object.position = CGPoint(x: 0, y: item_y) //★ここがよく分からない。
+                let coin = SKSpriteNode(texture: itemTexture)
+                coin.position = CGPoint(x: 0, y: item_y) //★ここがよく分からない。
 
                 // スプライトに物理演算を設定する(物理演算)
-                object.physicsBody = SKPhysicsBody(circleOfRadius: itemTexture.size().height / 2)
-                object.physicsBody?.categoryBitMask = self.itemCategory    // ←追加
+                coin.physicsBody = SKPhysicsBody(circleOfRadius: itemTexture.size().height / 2)
+                coin.physicsBody?.categoryBitMask = self.itemCategory    // ←追加
 
                 // 衝突の時に動かないように設定する(物理演算) falseだとぶつかった時に動かなくなる
-                object.physicsBody?.isDynamic = true
+                coin.physicsBody?.isDynamic = false
 
-                item.addChild(object)
-
-                // スコアアップ用の（物体）ノード (衝突判定)　画像と同じ場所に入れる--- ここから ---
-                let item_scoreNode = SKNode()
-                item_scoreNode.position = CGPoint(x: 0, y: item_y) //★ここがよく分からない。
-                item_scoreNode.physicsBody = SKPhysicsBody(circleOfRadius: itemTexture.size().height / 2)
-                item_scoreNode.physicsBody?.isDynamic = true
-                
-                //自身のカテゴリースコア用の物体(32ビットの数値)を設定
-                item_scoreNode.physicsBody?.categoryBitMask = self.item_scoreCategory
-                //衝突することを判別する相手のカテゴリー(32ビットの数値)を設定
-                item_scoreNode.physicsBody?.contactTestBitMask = self.birdCategory
-                
-
-                item.addChild(item_scoreNode)
-                // --- ここまで ---
+                item.addChild(coin)
+ 
+                //衝突することを判別する相手のカテゴリー(32ビットの数値)を設定(鳥はグラウンドか壁に衝突する)
+                coin.physicsBody?.contactTestBitMask = self.birdCategory    // ←追加
 
                 item.run(itemAnimation)
 
