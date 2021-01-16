@@ -413,7 +413,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate /* 追加 */ {
         item_bestScoreLabelNode.zPosition = 100 // 一番手前に表示する
         item_bestScoreLabelNode.horizontalAlignmentMode = SKLabelHorizontalAlignmentMode.left
 
-        let item_bestScore = userDefaults.integer(forKey: "ITEM")
+        let item_bestScore = userDefaults.integer(forKey: "Item")
         item_bestScoreLabelNode.text = "Item Best Score:\(item_bestScore)"
         self.addChild(item_bestScoreLabelNode)
         
