@@ -122,12 +122,13 @@ class GameScene: SKScene, SKPhysicsContactDelegate /* 追加 */ {
                 }
             
                 
-                var item_bestScore = userDefaults.integer(forKey: "ITEMBEST")
+                var item_bestScore = userDefaults.integer(forKey: "ITEM")
+                print(item_bestScore)
                 if item_score > item_bestScore {
                     print("itembestPointup")
                     item_bestScore = item_score
                     item_bestScoreLabelNode.text = "Item Best Score:\(item_bestScore)"    // ベストスコアの表示
-                    userDefaults.set(item_bestScore, forKey: "ITEMBEST") //★ITEM_BESTにするとうまくいかない_はuserDefaultsでは使ってはいけない?
+                    userDefaults.set(item_bestScore, forKey: "ITEM")
                     userDefaults.synchronize()
                 }
                 //コインの削除
@@ -412,7 +413,7 @@ class GameScene: SKScene, SKPhysicsContactDelegate /* 追加 */ {
         item_bestScoreLabelNode.zPosition = 100 // 一番手前に表示する
         item_bestScoreLabelNode.horizontalAlignmentMode = SKLabelHorizontalAlignmentMode.left
 
-        let item_bestScore = userDefaults.integer(forKey: "Item BEST")
+        let item_bestScore = userDefaults.integer(forKey: "ITEM")
         item_bestScoreLabelNode.text = "Item Best Score:\(item_bestScore)"
         self.addChild(item_bestScoreLabelNode)
         
